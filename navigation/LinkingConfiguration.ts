@@ -14,6 +14,8 @@ const linking: LinkingOptions<RootStackParamList> = {
   config: {
     screens: {
       ProductsOverview: 'products',
+      ProductDetail: 'products/:productId',
+      NotFound: '*',
     },
   },
 };

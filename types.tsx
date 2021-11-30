@@ -22,6 +22,7 @@ export type RootStackParamList = {
     productId: string;
     productTitle: string;
   };
+  NotFound: undefined;
 };
 
 export type RootStackScreenProps<Screen extends keyof RootStackParamList> =

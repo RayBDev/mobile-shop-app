@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView, Text, View, Button, Image } from 'react-native';
+import { ScrollView, Text, View, Image } from 'react-native';
 import { RootStackScreenProps } from '../../types';
 
 import { useAppSelector } from '../../hooks/reduxHooks';
@@ -8,19 +8,12 @@ import ShopButton from '../../components/ui/ShopButton';
 
 const ProductDetailsScreen = ({
   route,
-  navigation,
 }: RootStackScreenProps<'ProductDetail'>) => {
   const { t } = useTheme();
-  const { productId, productTitle } = route.params;
+  const { productId } = route.params;
   const selectedProduct = useAppSelector((state) =>
     state.products.availableProducts.find((product) => product.id === productId)
   );
-
-  React.useLayoutEffect(() => {
-    navigation.setOptions({
-      title: productTitle,
-    });
-  }, [productTitle]);
 
   return (
     <ScrollView>
