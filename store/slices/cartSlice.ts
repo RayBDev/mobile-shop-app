@@ -1,6 +1,7 @@
-import { AnyAction } from 'redux';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+
 import CartItem from '../../models/cart-item';
-import { ADD_TO_CART, REMOVE_FROM_CART } from '../actions/cart';
+import Product from '../../models/product';
 
 type CartItemType = {
   [key: string]: CartItem;
@@ -16,12 +17,14 @@ const initialState: InitialState = {
   totalAmount: 0,
 };
 
-export default (state = initialState, action: AnyAction) => {
-  switch (action.type) {
-    case ADD_TO_CART:
-      const addedProduct = action.product;
-      const productPrice: number = addedProduct.price;
-      const productTitle: string = addedProduct.title;
+export const cartSlice = createSlice({
+  name: 'cart',
+  initialState,
+  reducers: {
+    addToCart: (state, action: PayloadAction<Product>) => {
+      const addedProduct = action.payload;
+      const productPrice = addedProduct.price;
+      const productTitle = addedProduct.title;
 
       let updatedOrNewCartItem: CartItem;
 
@@ -33,11 +36,8 @@ export default (state = initialState, action: AnyAction) => {
           productTitle,
           state.items[addedProduct.id].sum + productPrice
         );
-        return {
-          ...state,
-          items: { ...state.items, [addedProduct.id]: updatedOrNewCartItem },
-          totalAmount: state.totalAmount + productPrice,
-        };
+        state.items = { [addedProduct.id]: updatedOrNewCartItem };
+        state.totalAmount = state.totalAmount + productPrice;
       } else {
         updatedOrNewCartItem = new CartItem(
           1,
@@ -45,14 +45,12 @@ export default (state = initialState, action: AnyAction) => {
           productTitle,
           productPrice
         );
-        return {
-          ...state,
-          items: { ...state.items, [addedProduct.id]: updatedOrNewCartItem },
-          totalAmount: state.totalAmount + productPrice,
-        };
+        state.items = { [addedProduct.id]: updatedOrNewCartItem };
+        state.totalAmount = state.totalAmount + productPrice;
       }
-    case REMOVE_FROM_CART:
-      const selectedCartItem = state.items[action.pid];
+    },
+    removeFromCart: (state, action: PayloadAction<string>) => {
+      const selectedCartItem = state.items[action.payload];
       const currentQty = selectedCartItem.quantity;
       type CartItemObject = {
         [key: string]: CartItem;
@@ -67,16 +65,20 @@ export default (state = initialState, action: AnyAction) => {
           selectedCartItem.productTitle,
           selectedCartItem.sum - selectedCartItem.productPrice
         );
-        updatedCartItems = { ...state.items, [action.pid]: updatedCartItem };
+        updatedCartItems = {
+          ...state.items,
+          [action.payload]: updatedCartItem,
+        };
       } else {
         updatedCartItems = { ...state.items };
-        delete updatedCartItems[action.pid];
+        delete updatedCartItems[action.payload];
       }
-      return {
-        ...state,
-        items: updatedCartItems,
-        totalAmount: state.totalAmount - selectedCartItem.productPrice,
-      };
-  }
-  return state;
-};
+      state.items = updatedCartItems;
+      state.totalAmount = state.totalAmount - selectedCartItem.productPrice;
+    },
+  },
+});
+
+export const { addToCart, removeFromCart } = cartSlice.actions;
+
+export default cartSlice.reducer;

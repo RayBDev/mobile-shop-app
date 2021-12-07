@@ -120,7 +120,7 @@ export const useTheme = () => {
       : {
           dark: isDark,
           colors: {
-            primary: isDark ? darkColors.primary : lightColors.primary,
+            primary: isDark ? darkColors.primary : lightColors.primaryContrast,
             background: isDark ? darkColors.selected : lightColors.paper,
             text: isDark
               ? darkColors.primaryContrast

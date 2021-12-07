@@ -5,8 +5,8 @@ import {
   Image,
   Platform,
   TouchableNativeFeedback,
+  TouchableOpacity,
 } from 'react-native';
-import { TouchableOpacity } from 'react-native-gesture-handler';
 import { useTheme } from '../../theme';
 import ShopButton from '../ui/ShopButton';
 

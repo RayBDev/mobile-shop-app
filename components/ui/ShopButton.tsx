@@ -1,40 +1,52 @@
 import React from 'react';
-import { Platform, Pressable, Text } from 'react-native';
+import { Platform, Pressable, Text, View } from 'react-native';
 
 import { useTheme } from '../../theme';
 
 type Props = {
   title: string;
   onPress: () => void;
+  disabled?: boolean;
 };
 
-const ShopButton = ({ title, onPress }: Props) => {
+const ShopButton = ({ title, onPress, disabled = false }: Props) => {
   const { t } = useTheme();
 
   return (
-    <Pressable
-      style={Platform.select({
-        ios: [t.justifyCenter, t.itemsCenter, t.pX3],
-        android: [
-          t.justifyCenter,
-          t.itemsCenter,
-          t.pY2,
-          t.pX3,
-          t.roundedSm,
-          t.bgPrimary,
-        ],
-      })}
-      onPress={onPress}
-    >
-      <Text
-        style={Platform.select({
-          ios: [t.textSm, t.textPrimary],
-          android: [t.textSm, t.textPrimaryContrast],
-        })}
+    <View style={[t.roundedSm, t.overflowHidden]}>
+      <Pressable
+        style={({ pressed }) =>
+          Platform.select({
+            ios: [
+              t.justifyCenter,
+              t.itemsCenter,
+              t.pY2,
+              t.pX3,
+              pressed && t.opacity30,
+            ],
+            android: [
+              t.justifyCenter,
+              t.itemsCenter,
+              t.pY2,
+              t.pX3,
+              disabled ? t.bgGray600 : t.bgPrimary,
+            ],
+          })
+        }
+        onPress={onPress}
+        android_ripple={{ ...t.textPrimaryLight }}
+        disabled={disabled}
       >
-        {title}
-      </Text>
-    </Pressable>
+        <Text
+          style={Platform.select({
+            ios: [t.textSm, disabled ? t.textGray700 : t.textPrimary],
+            android: [t.textSm, t.textPrimaryContrast],
+          })}
+        >
+          {title}
+        </Text>
+      </Pressable>
+    </View>
   );
 };
 
