@@ -8,23 +8,17 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { useTheme } from '../../theme';
-import ShopButton from '../ui/ShopButton';
 
 type Props = {
   image: string;
   title: string;
   price: number;
-  onViewDetail: () => void;
-  onAddToCart: () => void;
+  onSelect: () => void;
+  /** Add your buttons as children */
+  children: React.ReactNode;
 };
 
-const ProductItem = ({
-  image,
-  title,
-  price,
-  onViewDetail,
-  onAddToCart,
-}: Props) => {
+const ProductItem = ({ image, title, price, onSelect, children }: Props) => {
   const { t } = useTheme();
 
   let TouchableCmp: typeof React.Component;
@@ -38,12 +32,12 @@ const ProductItem = ({
   return (
     <View style={[t.shadow2xl, t.roundedSm, t.bgPrimaryContrast, t.h75, t.m5]}>
       <View style={[t.overflowHidden, t.roundedSm]}>
-        <TouchableCmp onPress={onViewDetail} useForeground>
+        <TouchableCmp onPress={onSelect} useForeground>
           <View>
             <View style={[t.wFull, t.h3_5, t.roundedTSm, t.overflowHidden]}>
               <Image style={[t.wFull, t.hFull]} source={{ uri: image }} />
             </View>
-            <View style={[t.itemsCenter, t.h3_20, t.p3]}>
+            <View style={[t.itemsCenter, t.h3_20, t.pT2]}>
               <Text style={[t.textLg, t.fontSansBold]}>{title}</Text>
               <Text style={[t.textSm, t.textGray700, t.fontSans]}>
                 ${price.toFixed(2)}
@@ -58,8 +52,7 @@ const ProductItem = ({
                 t.pX5,
               ]}
             >
-              <ShopButton title="View Details" onPress={onViewDetail} />
-              <ShopButton title="To Cart" onPress={onAddToCart} />
+              {children}
             </View>
           </View>
         </TouchableCmp>

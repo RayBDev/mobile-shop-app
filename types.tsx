@@ -20,6 +20,11 @@ declare global {
 // Navigator Param Types
 export type RootStackParamList = {
   Root: undefined;
+  EditProduct:
+    | {
+        productId: string;
+      }
+    | undefined;
   NotFound: undefined;
 };
 
@@ -36,9 +41,14 @@ export type OrdersStackParamList = {
   OrdersOverview: undefined;
 };
 
+export type UserProductsStackParamList = {
+  UserProductsOverview: undefined;
+};
+
 export type RootDrawerParamList = {
   Products: undefined;
   Orders: undefined;
+  UserProducts: undefined;
 };
 
 // Navigator Prop Types
@@ -57,6 +67,16 @@ export type OrdersStackScreenProps<Screen extends keyof OrdersStackParamList> =
     NativeStackScreenProps<OrdersStackParamList, Screen>,
     DrawerScreenProps<RootDrawerParamList>
   >;
+
+export type UserProductsStackScreenProps<
+  Screen extends keyof UserProductsStackParamList
+> = CompositeScreenProps<
+  CompositeScreenProps<
+    NativeStackScreenProps<UserProductsStackParamList, Screen>,
+    DrawerScreenProps<RootDrawerParamList>
+  >,
+  NativeStackScreenProps<RootStackParamList>
+>;
 
 export type RootDrawerScreenProps<Screen extends keyof RootDrawerParamList> =
   CompositeScreenProps<

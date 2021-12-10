@@ -6,8 +6,8 @@ import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import CartItem from '../../models/cart-item';
 import { useTheme } from '../../theme';
 import CartItemComponent from '../../components/shop/CartItem';
-import * as cartActions from '../../store/actions/cart';
-import * as orderActions from '../../store/actions/orders';
+import { addOrder } from '../../store/slices/ordersSlice';
+import { removeFromCart } from '../../store/slices/cartSlice';
 
 const CartScreen = () => {
   const { t } = useTheme();
@@ -15,7 +15,7 @@ const CartScreen = () => {
 
   const cartTotalAmount = useAppSelector((state) => state.cart.totalAmount);
   const cartItems = useAppSelector((state) => {
-    type TransformedCartItem = { productId: string } & CartItem;
+    type TransformedCartItem = CartItem;
     const transformedCartItems: TransformedCartItem[] = [];
     for (const key in state.cart.items) {
       transformedCartItems.push({
@@ -47,12 +47,14 @@ const CartScreen = () => {
       >
         <Text style={[t.fontSansBold, t.textLg]}>
           Total:{' '}
-          <Text style={[t.textSecondary]}>${cartTotalAmount.toFixed(2)}</Text>
+          <Text style={[t.textSecondary]}>
+            ${Math.round(Number(cartTotalAmount.toFixed(2)) * 100) / 100}
+          </Text>
         </Text>
         <ShopButton
           title="Order Now"
           onPress={() => {
-            dispatch(orderActions.addOrder(cartItems, cartTotalAmount));
+            dispatch(addOrder({ cartItems, cartTotalAmount }));
           }}
           disabled={cartItems.length === 0}
         />
@@ -66,7 +68,7 @@ const CartScreen = () => {
             title={itemData.item.productTitle}
             amount={itemData.item.sum}
             onRemove={() => {
-              dispatch(cartActions.removeFromCart(itemData.item.productId));
+              dispatch(removeFromCart(itemData.item.productId));
             }}
           />
         )}

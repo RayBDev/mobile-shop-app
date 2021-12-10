@@ -3,14 +3,22 @@ import { FlatList } from 'react-native';
 
 import ProductItem from '../../components/shop/ProductItem';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
+import { addToCart } from '../../store/slices/cartSlice';
 import { ProductsStackScreenProps } from '../../types';
-import * as cartActions from '../../store/actions/cart';
+import ShopButton from '../../components/ui/ShopButton';
 
 const ProductsOverviewScreen = ({
   navigation,
 }: ProductsStackScreenProps<'ProductsOverview'>) => {
   const products = useAppSelector((state) => state.products.availableProducts);
   const dispatch = useAppDispatch();
+
+  const selectItemHandler = (productId: string, productTitle: string) => {
+    navigation.navigate('ProductDetail', {
+      productId,
+      productTitle,
+    });
+  };
 
   return (
     <FlatList
@@ -20,16 +28,23 @@ const ProductsOverviewScreen = ({
           image={itemData.item.imageUrl}
           title={itemData.item.title}
           price={itemData.item.price}
-          onViewDetail={() =>
-            navigation.navigate('ProductDetail', {
-              productId: itemData.item.id,
-              productTitle: itemData.item.title,
-            })
+          onSelect={() =>
+            selectItemHandler(itemData.item.id, itemData.item.title)
           }
-          onAddToCart={() => {
-            dispatch(cartActions.addToCart(itemData.item));
-          }}
-        />
+        >
+          <ShopButton
+            title="View Details"
+            onPress={() => {
+              selectItemHandler(itemData.item.id, itemData.item.title);
+            }}
+          />
+          <ShopButton
+            title="To Cart"
+            onPress={() => {
+              dispatch(addToCart(itemData.item));
+            }}
+          />
+        </ProductItem>
       )}
     />
   );

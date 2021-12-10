@@ -5,7 +5,7 @@ import { ProductsStackScreenProps } from '../../types';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { useTheme } from '../../theme';
 import ShopButton from '../../components/ui/ShopButton';
-import * as cartActions from '../../store/actions/cart';
+import { addToCart } from '../../store/slices/cartSlice';
 
 const ProductDetailsScreen = ({
   route,
@@ -27,7 +27,7 @@ const ProductDetailsScreen = ({
         <ShopButton
           title="Add To Cart"
           onPress={() => {
-            dispatch(cartActions.addToCart(selectedProduct!));
+            dispatch(addToCart(selectedProduct!));
           }}
         />
       </View>

@@ -53,7 +53,7 @@ const fontFamilies = {
   sansBold: 'OpenSans-Bold',
 };
 
-// Custom fonts that include scaling
+// Custom heights that include scaling
 const height = {
   h75: {
     height: verticalScale(300),
@@ -67,6 +67,11 @@ const height = {
   h3_20: {
     height: '15%',
   },
+};
+
+// Custom widths that include scaling
+const width = {
+  maxW36: scale(144),
 };
 
 // Setup light theme

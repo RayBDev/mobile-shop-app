@@ -12,10 +12,11 @@ import {
   ProductsStackParamList,
   RootDrawerParamList,
   RootStackParamList,
-  RootStackScreenProps,
   ProductsStackScreenProps,
   OrdersStackScreenProps,
-  RootDrawerScreenProps,
+  UserProductsStackParamList,
+  UserProductsStackScreenProps,
+  RootStackScreenProps,
 } from '../types';
 import { useTheme } from '../theme';
 import ProductDetailsScreen from '../screens/shop/ProductDetailsScreen';
@@ -24,6 +25,8 @@ import NotFoundScreen from '../screens/NotFoundScreen';
 import CustomHeaderButton from '../components/ui/HeaderButton';
 import CartScreen from '../screens/shop/CartScreen';
 import OrdersScreen from '../screens/shop/OrdersScreen';
+import UserProductsScreen from '../screens/user/UserProductsScreen';
+import EditProductScreen from '../screens/user/EditProductScreen';
 
 const Navigation = () => {
   const { navTheme } = useTheme();
@@ -42,6 +45,8 @@ const RootStack = createNativeStackNavigator<RootStackParamList>();
 const Drawer = createDrawerNavigator<RootDrawerParamList>();
 const ProductsStack = createNativeStackNavigator<ProductsStackParamList>();
 const OrdersStack = createNativeStackNavigator<OrdersStackParamList>();
+const UserProductsStack =
+  createNativeStackNavigator<UserProductsStackParamList>();
 
 const RootNavigator = () => {
   const { t } = useTheme();
@@ -56,6 +61,13 @@ const RootNavigator = () => {
         name="Root"
         component={DrawerNavigator}
         options={{ headerShown: false }}
+      />
+      <RootStack.Screen
+        name="EditProduct"
+        component={EditProductScreen}
+        options={() => ({
+          title: 'Edit Product',
+        })}
       />
       <RootStack.Screen
         name="NotFound"
@@ -141,6 +153,46 @@ const OrdersNavigator = () => {
   );
 };
 
+const UserProductsNavigator = () => {
+  return (
+    <UserProductsStack.Navigator>
+      <UserProductsStack.Screen
+        name="UserProductsOverview"
+        component={UserProductsScreen}
+        options={({
+          navigation,
+        }: UserProductsStackScreenProps<'UserProductsOverview'>) => ({
+          title: 'Your Products',
+          headerLeft: () => (
+            <HeaderButtons HeaderButtonComponent={CustomHeaderButton}>
+              <Item
+                title="Menu"
+                iconName={Platform.OS === 'android' ? 'md-menu' : 'ios-menu'}
+                onPress={() => {
+                  navigation.toggleDrawer();
+                }}
+              />
+            </HeaderButtons>
+          ),
+          headerRight: () => (
+            <HeaderButtons HeaderButtonComponent={CustomHeaderButton}>
+              <Item
+                title="Add"
+                iconName={
+                  Platform.OS === 'android' ? 'md-create' : 'ios-create'
+                }
+                onPress={() => {
+                  navigation.navigate('EditProduct');
+                }}
+              />
+            </HeaderButtons>
+          ),
+        })}
+      />
+    </UserProductsStack.Navigator>
+  );
+};
+
 const DrawerNavigator = () => {
   const { t } = useTheme();
   return (
@@ -156,8 +208,9 @@ const DrawerNavigator = () => {
           headerShown: false,
           drawerIcon: (drawerConfig) => (
             <Ionicons
-              name={Platform.OS === 'android' ? 'md-create' : 'ios-create'}
+              name={Platform.OS === 'android' ? 'md-list' : 'ios-list'}
               size={23}
+              color={drawerConfig.color}
             />
           ),
         }}
@@ -165,7 +218,32 @@ const DrawerNavigator = () => {
       <Drawer.Screen
         name="Orders"
         component={OrdersNavigator}
-        options={{ title: 'Your Orders', headerShown: false }}
+        options={{
+          title: 'Your Orders',
+          headerShown: false,
+          drawerIcon: (drawerConfig) => (
+            <Ionicons
+              name={Platform.OS === 'android' ? 'md-cart' : 'ios-cart'}
+              size={23}
+              color={drawerConfig.color}
+            />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="UserProducts"
+        component={UserProductsNavigator}
+        options={{
+          title: 'Admin',
+          headerShown: false,
+          drawerIcon: (drawerConfig) => (
+            <Ionicons
+              name={Platform.OS === 'android' ? 'md-create' : 'ios-create'}
+              size={23}
+              color={drawerConfig.color}
+            />
+          ),
+        }}
       />
     </Drawer.Navigator>
   );

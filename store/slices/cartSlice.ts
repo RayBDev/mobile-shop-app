@@ -2,6 +2,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 import CartItem from '../../models/cart-item';
 import Product from '../../models/product';
+import { deleteProduct } from './productsSlice';
 
 type CartItemType = {
   [key: string]: CartItem;
@@ -23,6 +24,7 @@ export const cartSlice = createSlice({
   reducers: {
     addToCart: (state, action: PayloadAction<Product>) => {
       const addedProduct = action.payload;
+      const productId = addedProduct.id;
       const productPrice = addedProduct.price;
       const productTitle = addedProduct.title;
 
@@ -30,23 +32,32 @@ export const cartSlice = createSlice({
 
       if (state.items[addedProduct.id]) {
         // already have the item in the cart
-        updatedOrNewCartItem = new CartItem(
-          state.items[addedProduct.id].quantity + 1,
+        updatedOrNewCartItem = {
+          productId,
+          quantity: state.items[addedProduct.id].quantity + 1,
           productPrice,
           productTitle,
-          state.items[addedProduct.id].sum + productPrice
-        );
-        state.items = { [addedProduct.id]: updatedOrNewCartItem };
-        state.totalAmount = state.totalAmount + productPrice;
+          sum: state.items[addedProduct.id].sum + productPrice,
+        };
+
+        return {
+          ...state,
+          items: { ...state.items, [addedProduct.id]: updatedOrNewCartItem },
+          totalAmount: state.totalAmount + productPrice,
+        };
       } else {
-        updatedOrNewCartItem = new CartItem(
-          1,
+        updatedOrNewCartItem = {
+          productId,
+          quantity: 1,
           productPrice,
           productTitle,
-          productPrice
-        );
-        state.items = { [addedProduct.id]: updatedOrNewCartItem };
-        state.totalAmount = state.totalAmount + productPrice;
+          sum: productPrice,
+        };
+        return {
+          ...state,
+          items: { ...state.items, [addedProduct.id]: updatedOrNewCartItem },
+          totalAmount: state.totalAmount + productPrice,
+        };
       }
     },
     removeFromCart: (state, action: PayloadAction<string>) => {
@@ -59,12 +70,13 @@ export const cartSlice = createSlice({
 
       if (currentQty > 1) {
         // need to reduce, not erase
-        const updatedCartItem = new CartItem(
-          selectedCartItem.quantity - 1,
-          selectedCartItem.productPrice,
-          selectedCartItem.productTitle,
-          selectedCartItem.sum - selectedCartItem.productPrice
-        );
+        const updatedCartItem = {
+          productId: selectedCartItem.productId,
+          quantity: selectedCartItem.quantity - 1,
+          productPrice: selectedCartItem.productPrice,
+          productTitle: selectedCartItem.productTitle,
+          sum: selectedCartItem.sum - selectedCartItem.productPrice,
+        };
         updatedCartItems = {
           ...state.items,
           [action.payload]: updatedCartItem,
@@ -73,9 +85,30 @@ export const cartSlice = createSlice({
         updatedCartItems = { ...state.items };
         delete updatedCartItems[action.payload];
       }
-      state.items = updatedCartItems;
-      state.totalAmount = state.totalAmount - selectedCartItem.productPrice;
+      return {
+        ...state,
+        items: updatedCartItems,
+        totalAmount: state.totalAmount - selectedCartItem.productPrice,
+      };
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase('orders/addOrder', () => {
+      return initialState;
+    });
+    builder.addCase(deleteProduct, (state, action) => {
+      if (!state.items[action.payload]) {
+        return state;
+      }
+      const updatedItems = { ...state.items };
+      const itemTotal = state.items[action.payload].sum;
+      delete updatedItems[action.payload];
+      return {
+        ...state,
+        items: updatedItems,
+        totalAmount: state.totalAmount - itemTotal,
+      };
+    });
   },
 });
 
