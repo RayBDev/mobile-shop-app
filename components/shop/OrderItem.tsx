@@ -5,6 +5,7 @@ import { useTheme } from '../../theme';
 import ShopButton from '../ui/ShopButton';
 import CartItem from './CartItem';
 import CartItemModel from '../../models/cart-item';
+import Card from '../ui/Card';
 
 type Props = {
   /** Total dollar amount of order */
@@ -20,16 +21,7 @@ const OrderItem = ({ amount, date, items }: Props) => {
   const { t } = useTheme();
 
   return (
-    <View
-      style={[
-        t.shadow2xl,
-        t.roundedSm,
-        t.bgPrimaryContrast,
-        t.m5,
-        t.p2,
-        t.itemsCenter,
-      ]}
-    >
+    <Card style={[t.m5, t.p2, t.itemsCenter]}>
       <View
         style={[t.flexRow, t.justifyBetween, t.itemsCenter, t.wFull, t.mB4]}
       >
@@ -54,7 +46,7 @@ const OrderItem = ({ amount, date, items }: Props) => {
           ))}
         </View>
       )}
-    </View>
+    </Card>
   );
 };
 

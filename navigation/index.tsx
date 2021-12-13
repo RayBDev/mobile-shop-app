@@ -65,8 +65,8 @@ const RootNavigator = () => {
       <RootStack.Screen
         name="EditProduct"
         component={EditProductScreen}
-        options={() => ({
-          title: 'Edit Product',
+        options={({ route }: RootStackScreenProps<'EditProduct'>) => ({
+          headerTitle: route.params?.productId ? 'Edit Product' : 'Add Product',
         })}
       />
       <RootStack.Screen

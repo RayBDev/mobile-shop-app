@@ -8,6 +8,7 @@ import { useTheme } from '../../theme';
 import CartItemComponent from '../../components/shop/CartItem';
 import { addOrder } from '../../store/slices/ordersSlice';
 import { removeFromCart } from '../../store/slices/cartSlice';
+import Card from '../../components/ui/Card';
 
 const CartScreen = () => {
   const { t } = useTheme();
@@ -33,18 +34,7 @@ const CartScreen = () => {
 
   return (
     <View style={[t.m5]}>
-      <View
-        style={[
-          t.flexRow,
-          t.itemsCenter,
-          t.justifyBetween,
-          t.mB5,
-          t.p3,
-          t.shadow2xl,
-          t.roundedSm,
-          t.bgPrimaryContrast,
-        ]}
-      >
+      <Card style={[t.flexRow, t.itemsCenter, t.justifyBetween, t.mB5, t.p3]}>
         <Text style={[t.fontSansBold, t.textLg]}>
           Total:{' '}
           <Text style={[t.textSecondary]}>
@@ -58,7 +48,7 @@ const CartScreen = () => {
           }}
           disabled={cartItems.length === 0}
         />
-      </View>
+      </Card>
       <FlatList
         data={cartItems}
         keyExtractor={(item) => item.productId}

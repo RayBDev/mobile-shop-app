@@ -7,7 +7,9 @@ import {
   TouchableNativeFeedback,
   TouchableOpacity,
 } from 'react-native';
+
 import { useTheme } from '../../theme';
+import Card from '../ui/Card';
 
 type Props = {
   image: string;
@@ -30,7 +32,7 @@ const ProductItem = ({ image, title, price, onSelect, children }: Props) => {
   }
 
   return (
-    <View style={[t.shadow2xl, t.roundedSm, t.bgPrimaryContrast, t.h75, t.m5]}>
+    <Card style={[t.h75, t.m5]}>
       <View style={[t.overflowHidden, t.roundedSm]}>
         <TouchableCmp onPress={onSelect} useForeground>
           <View>
@@ -57,7 +59,7 @@ const ProductItem = ({ image, title, price, onSelect, children }: Props) => {
           </View>
         </TouchableCmp>
       </View>
-    </View>
+    </Card>
   );
 };
 

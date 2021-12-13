@@ -1,5 +1,5 @@
 import React from 'react';
-import { FlatList } from 'react-native';
+import { Alert, FlatList } from 'react-native';
 
 import ProductItem from '../../components/shop/ProductItem';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
@@ -17,6 +17,19 @@ const UserProductsScreen = ({
     navigation.navigate('EditProduct', {
       productId,
     });
+  };
+
+  const deleteHandler = (id: string) => {
+    Alert.alert('Are you sure?', 'Do you really want to delete this item?', [
+      { text: 'No', style: 'default' },
+      {
+        text: 'Yes',
+        style: 'destructive',
+        onPress: () => {
+          dispatch(deleteProduct(id));
+        },
+      },
+    ]);
   };
 
   return (
@@ -40,7 +53,7 @@ const UserProductsScreen = ({
           <ShopButton
             title="Delete"
             onPress={() => {
-              dispatch(deleteProduct(itemData.item.id));
+              deleteHandler(itemData.item.id);
             }}
           />
         </ProductItem>

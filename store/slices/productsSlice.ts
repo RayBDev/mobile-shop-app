@@ -31,8 +31,57 @@ export const productsSlice = createSlice({
         ),
       };
     },
+    createProduct: (
+      state,
+      action: PayloadAction<Omit<Product, 'id' | 'ownerId'>>
+    ) => {
+      const newProduct: Product = {
+        id: new Date().toString(),
+        ownerId: 'u1',
+        title: action.payload.title,
+        imageUrl: action.payload.imageUrl,
+        description: action.payload.description,
+        price: action.payload.price,
+      };
+      return {
+        ...state,
+        availableProducts: state.availableProducts.concat(newProduct),
+        userProducts: state.userProducts.concat(newProduct),
+      };
+    },
+    updateProduct: (
+      state,
+      action: PayloadAction<Omit<Product, 'ownerId' | 'price'>>
+    ) => {
+      const productIndex = state.userProducts.findIndex(
+        (prod) => prod.id === action.payload.id
+      );
+      const updatedProduct: Product = {
+        id: action.payload.id,
+        ownerId: state.userProducts[productIndex].ownerId,
+        title: action.payload.title,
+        imageUrl: action.payload.imageUrl,
+        description: action.payload.description,
+        price: state.userProducts[productIndex].price,
+      };
+      const updatedUserProducts = [...state.userProducts];
+      updatedUserProducts[productIndex] = updatedProduct;
+
+      const availableProductIndex = state.availableProducts.findIndex(
+        (prod) => prod.id === action.payload.id
+      );
+      const updatedAvailableProducts = [...state.availableProducts];
+      updatedAvailableProducts[availableProductIndex] = updatedProduct;
+
+      return {
+        ...state,
+        availableProducts: updatedAvailableProducts,
+        userProducts: updatedUserProducts,
+      };
+    },
   },
 });
 
-export const { deleteProduct } = productsSlice.actions;
+export const { deleteProduct, createProduct, updateProduct } =
+  productsSlice.actions;
 export default productsSlice.reducer;
