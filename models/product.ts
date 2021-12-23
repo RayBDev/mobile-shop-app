@@ -40,4 +40,8 @@ type Product = {
   price: number;
 };
 
+export type DatabaseProduct = {
+  [key: string]: Omit<Product, 'id'>;
+};
+
 export default Product;

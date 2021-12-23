@@ -34,7 +34,7 @@ export type ProductsStackParamList = {
     productId: string;
     productTitle: string;
   };
-  Cart: undefined;
+  Cart: { ownerId: string };
 };
 
 export type OrdersStackParamList = {

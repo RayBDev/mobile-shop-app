@@ -24,7 +24,7 @@
 //   }
 // }
 
-type CartItem = {
+export type CartItem = {
   /** ID of cart item */
   productId: string;
   /** Quantity of item in cart */
@@ -35,6 +35,24 @@ type CartItem = {
   productTitle: string;
   /** Extended sell of item in cart */
   sum: number;
+};
+
+export type CartItems = {
+  [key: string]: Omit<CartItem, 'productId'>;
+};
+
+export type CartDetails = {
+  /** An object of product id's that each contain an object with a cart item */
+  items: CartItems;
+  /** The total dollar value of all the sums (extended sells) of all the cart items */
+  totalAmount: number;
+};
+
+export type Cart = {
+  /** The owner ID which is also the id cart  */
+  ownerId: string;
+  /** All cart details including items and total dollar amount */
+  cart: CartDetails;
 };
 
 export default CartItem;

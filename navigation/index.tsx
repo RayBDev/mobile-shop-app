@@ -105,7 +105,7 @@ const ProductsNavigator = () => {
                 title="Cart"
                 iconName={Platform.OS === 'android' ? 'md-cart' : 'ios-cart'}
                 onPress={() => {
-                  navigation.navigate('Cart');
+                  navigation.navigate('Cart', { ownerId: 'u1' });
                 }}
               />
             </HeaderButtons>

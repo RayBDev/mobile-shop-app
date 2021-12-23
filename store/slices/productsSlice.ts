@@ -31,12 +31,9 @@ export const productsSlice = createSlice({
         ),
       };
     },
-    createProduct: (
-      state,
-      action: PayloadAction<Omit<Product, 'id' | 'ownerId'>>
-    ) => {
+    createProduct: (state, action: PayloadAction<Omit<Product, 'ownerId'>>) => {
       const newProduct: Product = {
-        id: new Date().toString(),
+        id: action.payload.id,
         ownerId: 'u1',
         title: action.payload.title,
         imageUrl: action.payload.imageUrl,

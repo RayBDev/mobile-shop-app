@@ -5,7 +5,7 @@ import { StyleSheet, Platform } from 'react-native';
 import useColorScheme from './hooks/useColorScheme';
 
 // Color scheme for light mode
-const lightColors = {
+export const lightColors = {
   primary: '#C2185B',
   primaryDark: '#77002E',
   primaryLight: '#E06896',
@@ -21,7 +21,7 @@ const lightColors = {
 };
 
 // Color scheme for dark mode
-const darkColors = {
+export const darkColors = {
   primary: '#C2185B',
   primaryDark: '#77002E',
   primaryLight: '#E06896',

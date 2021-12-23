@@ -1,23 +1,47 @@
-import React from 'react';
-import { Alert, FlatList } from 'react-native';
+import React, { useEffect } from 'react';
+import { Alert, FlatList, View, ActivityIndicator, Text } from 'react-native';
 
 import ProductItem from '../../components/shop/ProductItem';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import ShopButton from '../../components/ui/ShopButton';
 import { deleteProduct } from '../../store/slices/productsSlice';
 import { UserProductsStackScreenProps } from '../../types';
+import {
+  useDeleteOwnerProductMutation,
+  useFetchOwnerProductsQuery,
+} from '../../services/firebaseApi';
+import { useTheme, lightColors } from '../../theme';
 
 const UserProductsScreen = ({
   navigation,
 }: UserProductsStackScreenProps<'UserProductsOverview'>) => {
-  const userProducts = useAppSelector((state) => state.products.userProducts);
+  // const userProducts = useAppSelector((state) => state.products.userProducts);
+  const { t } = useTheme();
   const dispatch = useAppDispatch();
+  const {
+    data: userProducts,
+    isLoading: loadingOwnerProducts,
+    isError: errorLoadingOwnerProducts,
+    refetch,
+  } = useFetchOwnerProductsQuery('u1');
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      refetch();
+    });
+    return unsubscribe;
+  }, [navigation]);
 
   const editProductHandler = (productId: string) => {
     navigation.navigate('EditProduct', {
       productId,
     });
   };
+
+  const [
+    deleteProduct,
+    { isLoading: deletingProduct, isError: deleteProductError },
+  ] = useDeleteOwnerProductMutation();
 
   const deleteHandler = (id: string) => {
     Alert.alert('Are you sure?', 'Do you really want to delete this item?', [
@@ -26,11 +50,41 @@ const UserProductsScreen = ({
         text: 'Yes',
         style: 'destructive',
         onPress: () => {
-          dispatch(deleteProduct(id));
+          // dispatch(deleteProduct(id));
+          deleteProduct(id);
         },
       },
     ]);
   };
+
+  if (loadingOwnerProducts || deletingProduct) {
+    return (
+      <View style={[t.flex1, t.justifyCenter, t.itemsCenter]}>
+        <ActivityIndicator size="large" color={lightColors.primary} />
+      </View>
+    );
+  }
+
+  if (!loadingOwnerProducts && userProducts?.length === 0) {
+    return (
+      <View style={[t.flex1, t.justifyCenter, t.itemsCenter]}>
+        <Text>No products found. Maybe start adding some!</Text>
+      </View>
+    );
+  }
+
+  if (errorLoadingOwnerProducts) {
+    return (
+      <View style={[t.flex1, t.justifyCenter, t.itemsCenter]}>
+        <Text>There was an error retrieving the products from the server.</Text>
+        <ShopButton title="Try Again" onPress={refetch} />
+      </View>
+    );
+  }
+
+  if (deleteProductError) {
+    Alert.alert('Delete Failed', 'Please try again', [{ text: 'Okay' }]);
+  }
 
   return (
     <FlatList

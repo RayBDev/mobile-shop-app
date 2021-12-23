@@ -1,4 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
+import { setupListeners } from '@reduxjs/toolkit/dist/query';
+import { firebaseApi } from '../services/firebaseApi';
 
 import cartReducer from './slices/cartSlice';
 import ordersReducer from './slices/ordersSlice';
@@ -9,8 +11,16 @@ export const store = configureStore({
     cart: cartReducer,
     orders: ordersReducer,
     products: productsReducer,
+    // Generated Reducer from createApi
+    [firebaseApi.reducerPath]: firebaseApi.reducer,
   },
+  // Adding the api middleware enables caching, invalidation, polling,
+  // and other useful features of `rtk-query`.
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(firebaseApi.middleware),
 });
+
+setupListeners(store.dispatch);
 
 // Infer the `RootState` and `AppDispatch` types from the store itself
 export type RootState = ReturnType<typeof store.getState>;

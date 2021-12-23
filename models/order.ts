@@ -20,6 +20,8 @@ import CartItem from './cart-item';
 type Order = {
   /** Unique ID of the order */
   id: string;
+  /** ID of the order's owner */
+  ownerId: string;
   /** Array of items in the order */
   items: CartItem[];
   /** Total dollar value of order */
