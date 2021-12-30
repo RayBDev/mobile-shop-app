@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import Order from '../models/order';
-import CartItem, { Cart, CartDetails } from '../models/cart-item';
+import Order, { AllOwnerOrders } from '../models/order';
+import { Cart, CartDetails } from '../models/cart-item';
 import Product, { DatabaseProduct } from '../models/product';
 
 const transformDatabaseGetResponse = (response: DatabaseProduct) => {
@@ -30,19 +30,12 @@ type UpdateProductQueryParams = {
   product: Partial<Product>;
 };
 
-type UpdateCartQueryParams = {
-  /** The Unique ID of the cart in firebase */
-  cartId: string;
-  /** The cart item details you want to add to the cart */
-  cartItem: Partial<CartItem>;
-};
-
 export const firebaseApi = createApi({
   reducerPath: 'firebaseApi',
   baseQuery: fetchBaseQuery({
     baseUrl: 'https://shop-app-6a103-default-rtdb.firebaseio.com/',
   }),
-  tagTypes: ['UserProduct', 'Cart'],
+  tagTypes: ['UserProduct', 'Cart', 'Order'],
   endpoints: (build) => ({
     createProduct: build.mutation<PostResponse, Omit<Product, 'id'>>({
       query: (product) => ({
@@ -86,13 +79,20 @@ export const firebaseApi = createApi({
       invalidatesTags: ['UserProduct'],
     }),
     createOrder: build.mutation<PostResponse, Omit<Order, 'id'>>({
-      query: (order) => ({
-        url: 'orders.json',
+      query: ({ ownerId, order }) => ({
+        url: `orders/${ownerId}.json`,
         method: 'POST',
         body: order,
       }),
+      invalidatesTags: ['Order'],
     }),
-    createCart: build.mutation<PostResponse, Cart>({
+    fetchAllOwnerOrders: build.query<AllOwnerOrders, string>({
+      query: (ownerId) => ({
+        url: `orders/${ownerId}.json`,
+      }),
+      providesTags: ['Order'],
+    }),
+    updateCartItem: build.mutation<CartDetails, Cart>({
       query: ({ ownerId, cart }) => ({
         url: `carts/${ownerId}.json`,
         method: 'PUT',
@@ -102,15 +102,14 @@ export const firebaseApi = createApi({
     }),
     fetchCart: build.query<CartDetails, string>({
       query: (ownerId) => ({
-        url: `carts/${ownerId}.json"`,
+        url: `carts/${ownerId}.json`,
       }),
       providesTags: ['Cart'],
     }),
-    updateCart: build.mutation<Partial<CartItem>, UpdateCartQueryParams>({
-      query: ({ cartId, cartItem }) => ({
-        url: `carts/${cartId}.json`,
-        method: 'PUT',
-        body: cartItem,
+    deleteCart: build.mutation<void, string>({
+      query: (ownerId) => ({
+        url: `carts/${ownerId}.json`,
+        method: 'DELETE',
       }),
       invalidatesTags: ['Cart'],
     }),
@@ -124,7 +123,8 @@ export const {
   useUpdateOwnerProductMutation,
   useDeleteOwnerProductMutation,
   useCreateOrderMutation,
-  useCreateCartMutation,
+  useFetchAllOwnerOrdersQuery,
+  useUpdateCartItemMutation,
   useFetchCartQuery,
-  useUpdateCartMutation,
+  useDeleteCartMutation,
 } = firebaseApi;

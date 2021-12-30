@@ -132,6 +132,7 @@ const OrdersNavigator = () => {
       <OrdersStack.Screen
         name="OrdersOverview"
         component={OrdersScreen}
+        initialParams={{ ownerId: 'u1' }}
         options={({
           navigation,
         }: OrdersStackScreenProps<'OrdersOverview'>) => ({
@@ -218,6 +219,7 @@ const DrawerNavigator = () => {
       <Drawer.Screen
         name="Orders"
         component={OrdersNavigator}
+        initialParams={{ ownerId: 'u1' }}
         options={{
           title: 'Your Orders',
           headerShown: false,

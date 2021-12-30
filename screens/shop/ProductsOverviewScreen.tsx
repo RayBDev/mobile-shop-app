@@ -2,31 +2,26 @@ import React, { useEffect } from 'react';
 import { ActivityIndicator, FlatList, View, Text } from 'react-native';
 
 import ProductItem from '../../components/shop/ProductItem';
-import { useAppDispatch } from '../../hooks/reduxHooks';
-import { addToCart } from '../../store/slices/cartSlice';
 import { ProductsStackScreenProps } from '../../types';
 import ShopButton from '../../components/ui/ShopButton';
 import {
-  useCreateCartMutation,
+  useUpdateCartItemMutation,
   useFetchAllProductsQuery,
   useFetchCartQuery,
-  useUpdateCartMutation,
 } from '../../services/firebaseApi';
 import { useTheme, lightColors } from '../../theme';
-import CartItem, { CartItems } from '../../models/cart-item';
-import productsSlice from '../../store/slices/productsSlice';
+import { CartItems } from '../../models/cart-item';
 import Product from '../../models/product';
 
 const ProductsOverviewScreen = ({
   navigation,
 }: ProductsStackScreenProps<'ProductsOverview'>) => {
-  // const products = useAppSelector((state) => state.products.availableProducts);
   const { t } = useTheme();
-  const dispatch = useAppDispatch();
   const {
     data: allDatabaseProducts,
     isLoading: isLoadingAllProducts,
     isError: isErrorLoadingAllProducts,
+    isFetching: isFetchingAllProducts,
     refetch,
   } = useFetchAllProductsQuery();
 
@@ -34,17 +29,13 @@ const ProductsOverviewScreen = ({
     data: allCartItemsByOwner,
     isLoading: isLoadingCart,
     isError: isErrorLoadingCart,
+    isSuccess: isSuccessGettingCart,
   } = useFetchCartQuery('u1');
 
   const [
-    createCart,
+    createCartItem,
     { isLoading: isCreatingCart, isError: isCartCreateError },
-  ] = useCreateCartMutation();
-
-  const [
-    updateCart,
-    { isLoading: isUpdatingCart, isError: isErrorUpdatingCart },
-  ] = useUpdateCartMutation();
+  ] = useUpdateCartItemMutation();
 
   const selectItemHandler = (productId: string, productTitle: string) => {
     navigation.navigate('ProductDetail', {
@@ -61,24 +52,28 @@ const ProductsOverviewScreen = ({
   }, [navigation]);
 
   const addToCartButtonHandler = (product: Product) => {
-    if (!isLoadingCart && allCartItemsByOwner === null) {
-      createCart({
-        ownerId: 'u1',
-        cart: {
-          items: {
-            [product.id]: {
-              quantity: 1,
-              productPrice: product.price,
-              productTitle: product.title,
-              sum: product.price,
-            },
-          },
-          totalAmount: product.price,
+    let updatedOrNewCartItem: CartItems = {};
+
+    if (
+      !isLoadingCart &&
+      isSuccessGettingCart &&
+      !allCartItemsByOwner?.items[product.id]
+    ) {
+      updatedOrNewCartItem = {
+        [product.id]: {
+          quantity: 1,
+          productPrice: product.price,
+          productTitle: product.title,
+          sum: product.price,
         },
-      });
+      };
     }
-    if (!isLoadingCart && allCartItemsByOwner) {
-      const updatedOrNewCartItem: CartItems = {
+    if (
+      !isLoadingCart &&
+      isSuccessGettingCart &&
+      allCartItemsByOwner?.items[product.id]
+    ) {
+      updatedOrNewCartItem = {
         [product.id]: {
           quantity: allCartItemsByOwner.items[product.id].quantity + 1,
           productPrice: product.price,
@@ -86,21 +81,22 @@ const ProductsOverviewScreen = ({
           sum: allCartItemsByOwner.items[product.id].sum + product.price,
         },
       };
-
-      updateCart({
-        ownerId: 'u1',
-        cart: {
-          items: {
-            ...allCartItemsByOwner.items,
-            ...updatedOrNewCartItem,
-          },
-          totalAmount: product.price,
-        },
-      });
     }
+    createCartItem({
+      ownerId: 'u1',
+      cart: {
+        items: {
+          ...allCartItemsByOwner?.items,
+          ...updatedOrNewCartItem,
+        },
+        totalAmount: allCartItemsByOwner?.totalAmount
+          ? allCartItemsByOwner.totalAmount + product.price
+          : 0 + product.price,
+      },
+    });
   };
 
-  if (isLoadingAllProducts || isLoadingCart || isCreatingCart || isUpdatingCart)
+  if (isLoadingAllProducts)
     return (
       <View style={[t.flex1, t.justifyCenter, t.itemsCenter]}>
         <ActivityIndicator size="large" color={lightColors.primary} />
@@ -126,6 +122,8 @@ const ProductsOverviewScreen = ({
 
   return (
     <FlatList
+      onRefresh={refetch}
+      refreshing={isFetchingAllProducts}
       data={allDatabaseProducts}
       renderItem={(itemData) => (
         <ProductItem
@@ -142,13 +140,18 @@ const ProductsOverviewScreen = ({
               selectItemHandler(itemData.item.id, itemData.item.title);
             }}
           />
-          <ShopButton
-            title="To Cart"
-            onPress={() => {
-              // dispatch(addToCart(itemData.item));
-              addToCartButtonHandler(itemData.item);
-            }}
-          />
+
+          {isCreatingCart ? (
+            <ActivityIndicator size="small" color={lightColors.primary} />
+          ) : (
+            <ShopButton
+              title="To Cart"
+              onPress={() => {
+                // dispatch(addToCart(itemData.item));
+                addToCartButtonHandler(itemData.item);
+              }}
+            />
+          )}
         </ProductItem>
       )}
     />

@@ -1,9 +1,10 @@
 import React from 'react';
 import { Text, View, FlatList, ActivityIndicator } from 'react-native';
+import { format } from 'date-fns';
 
 import ShopButton from '../../components/ui/ShopButton';
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
-import CartItem from '../../models/cart-item';
+import CartItem, { CartDetails, CartItems } from '../../models/cart-item';
 import { lightColors, useTheme } from '../../theme';
 import CartItemComponent from '../../components/shop/CartItem';
 import { addOrder } from '../../store/slices/ordersSlice';
@@ -11,20 +12,17 @@ import { removeFromCart } from '../../store/slices/cartSlice';
 import Card from '../../components/ui/Card';
 import {
   useCreateOrderMutation,
+  useDeleteCartMutation,
   useFetchCartQuery,
+  useUpdateCartItemMutation,
 } from '../../services/firebaseApi';
 import { ProductsStackScreenProps } from '../../types';
 
 const CartScreen = ({ route }: ProductsStackScreenProps<'Cart'>) => {
   const { t } = useTheme();
-  const dispatch = useAppDispatch();
+  // const dispatch = useAppDispatch();
 
-  const cartTotalAmount = useAppSelector((state) => state.cart.totalAmount);
-
-  const [
-    createOrder,
-    { isLoading: isCreatingOrder, isError: isErrorCreatingOrder },
-  ] = useCreateOrderMutation();
+  // const cartTotalAmount = useAppSelector((state) => state.cart.totalAmount);
 
   const {
     data: allCartItemsByOwner,
@@ -32,6 +30,18 @@ const CartScreen = ({ route }: ProductsStackScreenProps<'Cart'>) => {
     isError: isErrorLoadingCart,
     refetch: refetchCart,
   } = useFetchCartQuery(route.params.ownerId);
+
+  const [
+    updateCartItem,
+    { isLoading: isCreatingCart, isError: isCartCreateError },
+  ] = useUpdateCartItemMutation();
+
+  const [deleteCart] = useDeleteCartMutation();
+
+  const [
+    createOrder,
+    { isLoading: isCreatingOrder, isError: isErrorCreatingOrder },
+  ] = useCreateOrderMutation();
 
   // const cartItems = useAppSelector((state) => {
   //   type TransformedCartItem = CartItem;
@@ -52,7 +62,7 @@ const CartScreen = ({ route }: ProductsStackScreenProps<'Cart'>) => {
 
   const cartItems = () => {
     const transformedCartItems: CartItem[] = [];
-    if (allCartItemsByOwner) {
+    if (!isLoadingCart && allCartItemsByOwner) {
       for (const key in allCartItemsByOwner.items) {
         transformedCartItems.push({
           productId: key,
@@ -61,9 +71,60 @@ const CartScreen = ({ route }: ProductsStackScreenProps<'Cart'>) => {
           quantity: allCartItemsByOwner.items[key].quantity,
           sum: allCartItemsByOwner.items[key].sum,
         });
-        return transformedCartItems.sort((a, b) =>
-          a.productId > b.productId ? 1 : -1
-        );
+      }
+      return transformedCartItems.sort((a, b) =>
+        a.productId > b.productId ? 1 : -1
+      );
+    }
+  };
+
+  const onRemoveHandler = (productId: string) => {
+    if (
+      !isLoadingCart &&
+      allCartItemsByOwner &&
+      allCartItemsByOwner.items[productId].quantity > 1
+    ) {
+      const updatedCartItem: Omit<CartItem, 'productId'> = {
+        quantity: allCartItemsByOwner.items[productId].quantity - 1,
+        productPrice: allCartItemsByOwner.items[productId].productPrice,
+        productTitle: allCartItemsByOwner.items[productId].productTitle,
+        sum:
+          allCartItemsByOwner.items[productId].sum -
+          allCartItemsByOwner.items[productId].productPrice,
+      };
+
+      const updatedCartItems: CartItems = {
+        ...allCartItemsByOwner.items,
+        [productId]: updatedCartItem,
+      };
+
+      return updateCartItem({
+        ownerId: route.params.ownerId,
+        cart: {
+          items: updatedCartItems,
+          totalAmount:
+            allCartItemsByOwner.totalAmount -
+            allCartItemsByOwner.items[productId].productPrice,
+        },
+      });
+    } else if (!isLoadingCart && allCartItemsByOwner) {
+      const updatedCartItems: CartItems = {
+        ...allCartItemsByOwner.items,
+      };
+      delete updatedCartItems[productId];
+
+      if (Object.keys(updatedCartItems).length) {
+        return updateCartItem({
+          ownerId: route.params.ownerId,
+          cart: {
+            items: updatedCartItems,
+            totalAmount:
+              allCartItemsByOwner.totalAmount -
+              allCartItemsByOwner.items[productId].productPrice,
+          },
+        });
+      } else {
+        return deleteCart(route.params.ownerId);
       }
     }
   };
@@ -91,15 +152,32 @@ const CartScreen = ({ route }: ProductsStackScreenProps<'Cart'>) => {
         <Text style={[t.fontSansBold, t.textLg]}>
           Total:{' '}
           <Text style={[t.textSecondary]}>
-            ${Math.round(Number(cartTotalAmount.toFixed(2)) * 100) / 100}
+            $
+            {allCartItemsByOwner
+              ? Math.round(
+                  Number(allCartItemsByOwner?.totalAmount.toFixed(2)) * 100
+                ) / 100
+              : 0}
           </Text>
         </Text>
         <ShopButton
           title="Order Now"
           onPress={() => {
             // dispatch(addOrder({ cartItems, cartTotalAmount }));
+            if (allCartItemsByOwner) {
+              createOrder({
+                ownerId: route.params.ownerId,
+                order: {
+                  items: allCartItemsByOwner?.items,
+                  totalAmount: allCartItemsByOwner?.totalAmount,
+                  date: format(new Date(), 'MMM do yyyy, hh:mm aaa'),
+                },
+              }).then(() => {
+                deleteCart(route.params.ownerId);
+              });
+            }
           }}
-          disabled={cartItems.length === 0}
+          disabled={cartItems() === undefined || cartItems()?.length === 0}
         />
       </Card>
       <FlatList
@@ -111,7 +189,8 @@ const CartScreen = ({ route }: ProductsStackScreenProps<'Cart'>) => {
             title={itemData.item.productTitle}
             amount={itemData.item.sum}
             onRemove={() => {
-              dispatch(removeFromCart(itemData.item.productId));
+              // dispatch(removeFromCart(itemData.item.productId));
+              onRemoveHandler(itemData.item.productId);
             }}
           />
         )}

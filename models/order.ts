@@ -1,4 +1,4 @@
-import CartItem from './cart-item';
+import { CartItems } from './cart-item';
 
 // class Order {
 //   id: string;
@@ -17,17 +17,26 @@ import CartItem from './cart-item';
 //   }
 // }
 
-type Order = {
+export type OrderDetails = {
+  /** Array of items in the order */
+  items: CartItems;
+  /** Total dollar value of order */
+  totalAmount: number;
+  /** Pre-formatted Date Order was placed as a string */
+  date: string;
+};
+
+export type AllOwnerOrders = {
+  [key: string]: Omit<OrderDetails, 'id'>;
+};
+
+export type Order = {
   /** Unique ID of the order */
   id: string;
   /** ID of the order's owner */
   ownerId: string;
-  /** Array of items in the order */
-  items: CartItem[];
-  /** Total dollar value of order */
-  totalAmount: number;
-  /** Pre-formated Date Order was placed as a string */
-  date: string;
+  /** The Items, totalAmount and date of the order */
+  order: OrderDetails;
 };
 
 export default Order;

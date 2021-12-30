@@ -38,7 +38,7 @@ export type ProductsStackParamList = {
 };
 
 export type OrdersStackParamList = {
-  OrdersOverview: undefined;
+  OrdersOverview: { ownerId: string };
 };
 
 export type UserProductsStackParamList = {
@@ -47,7 +47,7 @@ export type UserProductsStackParamList = {
 
 export type RootDrawerParamList = {
   Products: undefined;
-  Orders: undefined;
+  Orders: { ownerId: string };
   UserProducts: undefined;
 };
 
