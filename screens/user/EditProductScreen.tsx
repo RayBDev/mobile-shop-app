@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { HeaderButtons, Item } from 'react-navigation-header-buttons';
 
-import { useAppDispatch } from '../../hooks/reduxHooks';
+import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { useTheme, lightColors } from '../../theme';
 import { RootStackScreenProps } from '../../types';
 import CustomHeaderButton from '../../components/ui/HeaderButton';
@@ -76,16 +76,14 @@ const EditProductScreen = ({
   navigation,
 }: RootStackScreenProps<'EditProduct'>) => {
   const productId = route.params?.productId;
-  // const editedProduct = useAppSelector((state) =>
-  //   state.products.userProducts.find((prod) => prod.id === productId)
-  // );
+  const firebaseUserToken = useAppSelector((state) => state.auth.userToken);
 
   const {
     data: userProducts,
     isLoading: isFetching,
     isError: isErrorFetching,
     refetch,
-  } = useFetchOwnerProductsQuery('u1');
+  } = useFetchOwnerProductsQuery(route.params?.ownerId!);
 
   const editedProduct = userProducts?.find(
     (product) => product.id === productId
@@ -146,14 +144,6 @@ const EditProductScreen = ({
                 return;
               }
               if (editedProduct && productId) {
-                // dispatch(
-                //   updateProduct({
-                //     id: productId,
-                //     title: formState.inputValues.title,
-                //     description: formState.inputValues.description,
-                //     imageUrl: formState.inputValues.imageUrl,
-                //   })
-                // );
                 updateProduct({
                   id: productId,
                   product: {
@@ -161,27 +151,19 @@ const EditProductScreen = ({
                     description: formState.inputValues.description,
                     imageUrl: formState.inputValues.imageUrl,
                   },
+                  token: firebaseUserToken!,
                 });
               } else {
                 createProductInFirebase({
-                  ownerId: 'u1',
-                  title: formState.inputValues.title,
-                  description: formState.inputValues.description,
-                  imageUrl: formState.inputValues.imageUrl,
-                  price: Number(formState.inputValues.price),
+                  product: {
+                    ownerId: route.params?.ownerId!,
+                    title: formState.inputValues.title,
+                    description: formState.inputValues.description,
+                    imageUrl: formState.inputValues.imageUrl,
+                    price: Number(formState.inputValues.price),
+                  },
+                  token: firebaseUserToken!,
                 });
-                // .unwrap()
-                // .then((data) => {
-                //   dispatch(
-                //     createProduct({
-                //       id: data.name,
-                //       title: formState.inputValues.title,
-                //       description: formState.inputValues.description,
-                //       imageUrl: formState.inputValues.imageUrl,
-                //       price: Number(formState.inputValues.price),
-                //     })
-                //   );
-                // });
               }
             }}
           />
@@ -237,7 +219,7 @@ const EditProductScreen = ({
           <Input
             id="title"
             label="Title"
-            errorText="Please enter a valid title!"
+            errorMessage="Please enter a valid title!"
             autoCapitalize="sentences"
             autoCorrect
             returnKeyType="next"
@@ -249,7 +231,7 @@ const EditProductScreen = ({
           <Input
             id="imageUrl"
             label="Image Url"
-            errorText="Please enter a valid image url!"
+            errorMessage="Please enter a valid image url!"
             returnKeyType="next"
             onInputChange={inputChangeHandler}
             initialValue={editedProduct ? editedProduct.imageUrl : ''}
@@ -260,7 +242,7 @@ const EditProductScreen = ({
             <Input
               id="price"
               label="Price"
-              errorText="Please enter a valid price!"
+              errorMessage="Please enter a valid price!"
               returnKeyType="next"
               keyboardType="decimal-pad"
               onInputChange={inputChangeHandler}
@@ -273,7 +255,7 @@ const EditProductScreen = ({
           <Input
             id="description"
             label="Description"
-            errorText="Please enter a valid description!"
+            errorMessage="Please enter a valid description!"
             autoCapitalize="sentences"
             autoCorrect
             multiline

@@ -13,17 +13,18 @@ import {
 import { useTheme, lightColors } from '../../theme';
 
 const UserProductsScreen = ({
+  route,
   navigation,
 }: UserProductsStackScreenProps<'UserProductsOverview'>) => {
-  // const userProducts = useAppSelector((state) => state.products.userProducts);
   const { t } = useTheme();
-  const dispatch = useAppDispatch();
+  const firebaseUserToken = useAppSelector((state) => state.auth.userToken);
+
   const {
     data: userProducts,
     isLoading: loadingOwnerProducts,
     isError: errorLoadingOwnerProducts,
     refetch,
-  } = useFetchOwnerProductsQuery('u1');
+  } = useFetchOwnerProductsQuery(route.params.ownerId!);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
@@ -35,6 +36,7 @@ const UserProductsScreen = ({
   const editProductHandler = (productId: string) => {
     navigation.navigate('EditProduct', {
       productId,
+      ownerId: route.params.ownerId!,
     });
   };
 
@@ -51,7 +53,7 @@ const UserProductsScreen = ({
         style: 'destructive',
         onPress: () => {
           // dispatch(deleteProduct(id));
-          deleteProduct(id);
+          deleteProduct({ id, token: firebaseUserToken! });
         },
       },
     ]);

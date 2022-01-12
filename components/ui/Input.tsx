@@ -49,13 +49,13 @@ type UserProps = {
   /** Text Input label */
   label: string;
   /** Error text displayed when field isn't valid */
-  errorText: string;
+  errorMessage: string;
   /** Initial Value of the input field */
   initialValue: string;
   /** Is field required? */
   required?: boolean;
   initiallyValid: boolean;
-  email?: string;
+  email?: boolean;
   min?: number;
   max?: number;
   minLength?: number;
@@ -126,7 +126,7 @@ const Input = (props: Props) => {
       {!inputState.isValid && inputState.touched && (
         <View style={[t.mY2]}>
           <Text style={[t.fontSans, t.textError, t.textXs]}>
-            {props.errorText}
+            {props.errorMessage}
           </Text>
         </View>
       )}

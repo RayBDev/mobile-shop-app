@@ -16,7 +16,7 @@ const OrdersScreen = ({ route }: OrdersStackScreenProps<'OrdersOverview'>) => {
     isLoading: isLoadingOwnerOrders,
     isError: isErrorLoadingOwnerOrders,
     refetch: refetchOrders,
-  } = useFetchAllOwnerOrdersQuery(route.params.ownerId);
+  } = useFetchAllOwnerOrdersQuery(route.params.ownerId!);
 
   let transformedOrders = [];
 
@@ -45,6 +45,14 @@ const OrdersScreen = ({ route }: OrdersStackScreenProps<'OrdersOverview'>) => {
     return (
       <View style={[t.flex1, t.justifyCenter, t.itemsCenter]}>
         <ActivityIndicator size="large" color={lightColors.primary} />
+      </View>
+    );
+  }
+
+  if (!isLoadingOwnerOrders && transformedOrders?.length === 0) {
+    return (
+      <View style={[t.flex1, t.justifyCenter, t.itemsCenter]}>
+        <Text>No orders found!</Text>
       </View>
     );
   }

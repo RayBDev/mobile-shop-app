@@ -19,36 +19,38 @@ declare global {
 
 // Navigator Param Types
 export type RootStackParamList = {
+  Auth: undefined;
   Root: undefined;
   EditProduct:
     | {
         productId: string;
+        ownerId: string | null;
       }
     | undefined;
   NotFound: undefined;
 };
 
 export type ProductsStackParamList = {
-  ProductsOverview: undefined;
+  ProductsOverview: { ownerId: string | null };
   ProductDetail: {
     productId: string;
     productTitle: string;
   };
-  Cart: { ownerId: string };
+  Cart: { ownerId: string | null };
 };
 
 export type OrdersStackParamList = {
-  OrdersOverview: { ownerId: string };
+  OrdersOverview: { ownerId: string | null };
 };
 
 export type UserProductsStackParamList = {
-  UserProductsOverview: undefined;
+  UserProductsOverview: { ownerId: string | null };
 };
 
 export type RootDrawerParamList = {
-  Products: undefined;
-  Orders: { ownerId: string };
-  UserProducts: undefined;
+  Products: { ownerId: string | null };
+  Orders: { ownerId: string | null };
+  UserProducts: { ownerId: string | null };
 };
 
 // Navigator Prop Types

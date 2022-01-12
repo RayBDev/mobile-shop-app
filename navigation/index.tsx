@@ -1,7 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createDrawerNavigator } from '@react-navigation/drawer';
+import {
+  createDrawerNavigator,
+  DrawerContentScrollView,
+  DrawerItem,
+  DrawerItemList,
+} from '@react-navigation/drawer';
 import { Platform, Text } from 'react-native';
 import { HeaderButtons, Item } from 'react-navigation-header-buttons';
 import { Ionicons } from '@expo/vector-icons';
@@ -27,9 +32,13 @@ import CartScreen from '../screens/shop/CartScreen';
 import OrdersScreen from '../screens/shop/OrdersScreen';
 import UserProductsScreen from '../screens/user/UserProductsScreen';
 import EditProductScreen from '../screens/user/EditProductScreen';
+import AuthScreen from '../screens/user/AuthScreen';
+import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
+import { getTokensFromSecureStore, signOut } from '../store/slices/authSlice';
 
 const Navigation = () => {
   const { navTheme } = useTheme();
+
   return (
     <NavigationContainer
       theme={navTheme}
@@ -50,6 +59,15 @@ const UserProductsStack =
 
 const RootNavigator = () => {
   const { t } = useTheme();
+  const dispatch = useAppDispatch();
+  const userToken = useAppSelector((state) => state.auth.userToken);
+  const ownerId = useAppSelector((state) => state.auth.ownerId);
+  const tokenExpiry = useAppSelector((state) => state.auth.tokenExpiry);
+
+  useEffect(() => {
+    dispatch(getTokensFromSecureStore());
+  }, []);
+
   return (
     <RootStack.Navigator
       screenOptions={{
@@ -57,33 +75,48 @@ const RootNavigator = () => {
         headerBackTitleStyle: t.fontSans,
       }}
     >
-      <RootStack.Screen
-        name="Root"
-        component={DrawerNavigator}
-        options={{ headerShown: false }}
-      />
-      <RootStack.Screen
-        name="EditProduct"
-        component={EditProductScreen}
-        options={({ route }: RootStackScreenProps<'EditProduct'>) => ({
-          headerTitle: route.params?.productId ? 'Edit Product' : 'Add Product',
-        })}
-      />
-      <RootStack.Screen
-        name="NotFound"
-        component={NotFoundScreen}
-        options={{ title: 'Oops!' }}
-      />
+      {!userToken || !tokenExpiry || new Date() > new Date(tokenExpiry) ? (
+        <RootStack.Screen
+          name="Auth"
+          component={AuthScreen}
+          options={{ headerTitle: 'Authenticate' }}
+        />
+      ) : (
+        <>
+          <RootStack.Screen
+            name="Root"
+            component={DrawerNavigator}
+            options={{ headerShown: false }}
+          />
+          <RootStack.Screen
+            name="EditProduct"
+            component={EditProductScreen}
+            initialParams={{ ownerId }}
+            options={({ route }: RootStackScreenProps<'EditProduct'>) => ({
+              headerTitle: route.params?.productId
+                ? 'Edit Product'
+                : 'Add Product',
+            })}
+          />
+          <RootStack.Screen
+            name="NotFound"
+            component={NotFoundScreen}
+            options={{ title: 'Oops!' }}
+          />
+        </>
+      )}
     </RootStack.Navigator>
   );
 };
 
 const ProductsNavigator = () => {
+  const ownerId = useAppSelector((state) => state.auth.ownerId);
   return (
     <ProductsStack.Navigator>
       <ProductsStack.Screen
         name="ProductsOverview"
         component={ProductsOverviewScreen}
+        initialParams={{ ownerId }}
         options={({
           navigation,
         }: ProductsStackScreenProps<'ProductsOverview'>) => ({
@@ -105,7 +138,7 @@ const ProductsNavigator = () => {
                 title="Cart"
                 iconName={Platform.OS === 'android' ? 'md-cart' : 'ios-cart'}
                 onPress={() => {
-                  navigation.navigate('Cart', { ownerId: 'u1' });
+                  navigation.navigate('Cart', { ownerId });
                 }}
               />
             </HeaderButtons>
@@ -120,6 +153,7 @@ const ProductsNavigator = () => {
       <ProductsStack.Screen
         name="Cart"
         component={CartScreen}
+        initialParams={{ ownerId }}
         options={{ title: 'Your Cart' }}
       />
     </ProductsStack.Navigator>
@@ -127,12 +161,13 @@ const ProductsNavigator = () => {
 };
 
 const OrdersNavigator = () => {
+  const ownerId = useAppSelector((state) => state.auth.ownerId);
   return (
     <OrdersStack.Navigator>
       <OrdersStack.Screen
         name="OrdersOverview"
         component={OrdersScreen}
-        initialParams={{ ownerId: 'u1' }}
+        initialParams={{ ownerId }}
         options={({
           navigation,
         }: OrdersStackScreenProps<'OrdersOverview'>) => ({
@@ -155,11 +190,13 @@ const OrdersNavigator = () => {
 };
 
 const UserProductsNavigator = () => {
+  const ownerId = useAppSelector((state) => state.auth.ownerId);
   return (
     <UserProductsStack.Navigator>
       <UserProductsStack.Screen
         name="UserProductsOverview"
         component={UserProductsScreen}
+        initialParams={{ ownerId }}
         options={({
           navigation,
         }: UserProductsStackScreenProps<'UserProductsOverview'>) => ({
@@ -196,15 +233,41 @@ const UserProductsNavigator = () => {
 
 const DrawerNavigator = () => {
   const { t } = useTheme();
+  const dispatch = useAppDispatch();
+  const ownerId = useAppSelector((state) => state.auth.ownerId);
   return (
     <Drawer.Navigator
       screenOptions={{
         headerTitleStyle: t.fontSansBold,
       }}
+      initialRouteName="Products"
+      drawerContent={(props) => {
+        return (
+          <DrawerContentScrollView {...props}>
+            <DrawerItemList {...props} />
+            <DrawerItem
+              label="Logout"
+              onPress={() => {
+                dispatch(signOut());
+              }}
+              icon={(drawerConfig) => (
+                <Ionicons
+                  name={
+                    Platform.OS === 'android' ? 'md-log-out' : 'ios-log-out'
+                  }
+                  size={23}
+                  color={drawerConfig.color}
+                />
+              )}
+            />
+          </DrawerContentScrollView>
+        );
+      }}
     >
       <Drawer.Screen
         name="Products"
         component={ProductsNavigator}
+        initialParams={{ ownerId }}
         options={{
           headerShown: false,
           drawerIcon: (drawerConfig) => (
@@ -219,7 +282,7 @@ const DrawerNavigator = () => {
       <Drawer.Screen
         name="Orders"
         component={OrdersNavigator}
-        initialParams={{ ownerId: 'u1' }}
+        initialParams={{ ownerId }}
         options={{
           title: 'Your Orders',
           headerShown: false,
@@ -235,6 +298,7 @@ const DrawerNavigator = () => {
       <Drawer.Screen
         name="UserProducts"
         component={UserProductsNavigator}
+        initialParams={{ ownerId }}
         options={{
           title: 'Admin',
           headerShown: false,

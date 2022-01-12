@@ -23,13 +23,14 @@ const CartScreen = ({ route }: ProductsStackScreenProps<'Cart'>) => {
   // const dispatch = useAppDispatch();
 
   // const cartTotalAmount = useAppSelector((state) => state.cart.totalAmount);
+  const firebaseUserToken = useAppSelector((state) => state.auth.userToken);
 
   const {
     data: allCartItemsByOwner,
     isLoading: isLoadingCart,
     isError: isErrorLoadingCart,
     refetch: refetchCart,
-  } = useFetchCartQuery(route.params.ownerId);
+  } = useFetchCartQuery(route.params.ownerId!);
 
   const [
     updateCartItem,
@@ -99,13 +100,14 @@ const CartScreen = ({ route }: ProductsStackScreenProps<'Cart'>) => {
       };
 
       return updateCartItem({
-        ownerId: route.params.ownerId,
         cart: {
           items: updatedCartItems,
           totalAmount:
             allCartItemsByOwner.totalAmount -
             allCartItemsByOwner.items[productId].productPrice,
         },
+        ownerId: route.params.ownerId!,
+        token: firebaseUserToken!,
       });
     } else if (!isLoadingCart && allCartItemsByOwner) {
       const updatedCartItems: CartItems = {
@@ -115,16 +117,20 @@ const CartScreen = ({ route }: ProductsStackScreenProps<'Cart'>) => {
 
       if (Object.keys(updatedCartItems).length) {
         return updateCartItem({
-          ownerId: route.params.ownerId,
           cart: {
             items: updatedCartItems,
             totalAmount:
               allCartItemsByOwner.totalAmount -
               allCartItemsByOwner.items[productId].productPrice,
           },
+          ownerId: route.params.ownerId!,
+          token: firebaseUserToken!,
         });
       } else {
-        return deleteCart(route.params.ownerId);
+        return deleteCart({
+          ownerId: route.params.ownerId!,
+          token: firebaseUserToken!,
+        });
       }
     }
   };
@@ -166,14 +172,18 @@ const CartScreen = ({ route }: ProductsStackScreenProps<'Cart'>) => {
             // dispatch(addOrder({ cartItems, cartTotalAmount }));
             if (allCartItemsByOwner) {
               createOrder({
-                ownerId: route.params.ownerId,
+                ownerId: route.params.ownerId!,
                 order: {
                   items: allCartItemsByOwner?.items,
                   totalAmount: allCartItemsByOwner?.totalAmount,
                   date: format(new Date(), 'MMM do yyyy, hh:mm aaa'),
                 },
+                token: firebaseUserToken!,
               }).then(() => {
-                deleteCart(route.params.ownerId);
+                deleteCart({
+                  ownerId: route.params.ownerId!,
+                  token: firebaseUserToken!,
+                });
               });
             }
           }}

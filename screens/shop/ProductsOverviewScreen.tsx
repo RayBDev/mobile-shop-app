@@ -12,11 +12,15 @@ import {
 import { useTheme, lightColors } from '../../theme';
 import { CartItems } from '../../models/cart-item';
 import Product from '../../models/product';
+import { useAppSelector } from '../../hooks/reduxHooks';
 
 const ProductsOverviewScreen = ({
+  route,
   navigation,
 }: ProductsStackScreenProps<'ProductsOverview'>) => {
   const { t } = useTheme();
+  const firebaseUserToken = useAppSelector((state) => state.auth.userToken);
+
   const {
     data: allDatabaseProducts,
     isLoading: isLoadingAllProducts,
@@ -30,7 +34,7 @@ const ProductsOverviewScreen = ({
     isLoading: isLoadingCart,
     isError: isErrorLoadingCart,
     isSuccess: isSuccessGettingCart,
-  } = useFetchCartQuery('u1');
+  } = useFetchCartQuery(route.params.ownerId!);
 
   const [
     createCartItem,
@@ -83,7 +87,7 @@ const ProductsOverviewScreen = ({
       };
     }
     createCartItem({
-      ownerId: 'u1',
+      ownerId: route.params.ownerId!,
       cart: {
         items: {
           ...allCartItemsByOwner?.items,
@@ -93,6 +97,7 @@ const ProductsOverviewScreen = ({
           ? allCartItemsByOwner.totalAmount + product.price
           : 0 + product.price,
       },
+      token: firebaseUserToken!,
     });
   };
 
@@ -147,7 +152,6 @@ const ProductsOverviewScreen = ({
             <ShopButton
               title="To Cart"
               onPress={() => {
-                // dispatch(addToCart(itemData.item));
                 addToCartButtonHandler(itemData.item);
               }}
             />

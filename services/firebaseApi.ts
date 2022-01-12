@@ -23,11 +23,44 @@ type PostResponse = {
   name: string;
 };
 
+type AddProductMutationParams = {
+  /** The product details you want to create */
+  product: Omit<Product, 'id'>;
+  /** The authentication token of the user */
+  token: string;
+};
+
 type UpdateProductQueryParams = {
   /** The Unique ID of the product in firebase */
   id: string;
   /** The product details you want to update */
   product: Partial<Product>;
+  /** The authentication token of the user */
+  token: string;
+};
+
+type DeleteProductMutationParams = {
+  /** The Unique ID of the product in firebase */
+  id: string;
+  /** The authentication token of the user */
+  token: string;
+};
+
+type CreateOrderMutationParams = Omit<Order, 'id'> & {
+  /** The authentication token of the user */
+  token: string;
+};
+
+type UpdateCartMutationParams = Cart & {
+  /** The authentication token of the user */
+  token: string;
+};
+
+type DeleteCartMutationParams = {
+  /** The id of the cart owner */
+  ownerId: string;
+  /** The authentication token of the user */
+  token: string;
 };
 
 export const firebaseApi = createApi({
@@ -37,9 +70,9 @@ export const firebaseApi = createApi({
   }),
   tagTypes: ['UserProduct', 'Cart', 'Order'],
   endpoints: (build) => ({
-    createProduct: build.mutation<PostResponse, Omit<Product, 'id'>>({
-      query: (product) => ({
-        url: 'products.json',
+    createProduct: build.mutation<PostResponse, AddProductMutationParams>({
+      query: ({ product, token }) => ({
+        url: `products.json?auth=${token}`,
         method: 'POST',
         body: product,
       }),
@@ -64,23 +97,23 @@ export const firebaseApi = createApi({
       Partial<Product>,
       UpdateProductQueryParams
     >({
-      query: ({ id, product }) => ({
-        url: `products/${id}.json`,
+      query: ({ id, product, token }) => ({
+        url: `products/${id}.json?auth=${token}`,
         method: 'PATCH',
         body: product,
       }),
       invalidatesTags: ['UserProduct'],
     }),
-    deleteOwnerProduct: build.mutation<null, string>({
-      query: (id) => ({
-        url: `products/${id}.json`,
+    deleteOwnerProduct: build.mutation<null, DeleteProductMutationParams>({
+      query: ({ id, token }) => ({
+        url: `products/${id}.json?auth=${token}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['UserProduct'],
     }),
-    createOrder: build.mutation<PostResponse, Omit<Order, 'id'>>({
-      query: ({ ownerId, order }) => ({
-        url: `orders/${ownerId}.json`,
+    createOrder: build.mutation<PostResponse, CreateOrderMutationParams>({
+      query: ({ ownerId, order, token }) => ({
+        url: `orders/${ownerId}.json?auth=${token}`,
         method: 'POST',
         body: order,
       }),
@@ -92,9 +125,9 @@ export const firebaseApi = createApi({
       }),
       providesTags: ['Order'],
     }),
-    updateCartItem: build.mutation<CartDetails, Cart>({
-      query: ({ ownerId, cart }) => ({
-        url: `carts/${ownerId}.json`,
+    updateCartItem: build.mutation<CartDetails, UpdateCartMutationParams>({
+      query: ({ ownerId, cart, token }) => ({
+        url: `carts/${ownerId}.json?auth=${token}`,
         method: 'PUT',
         body: cart,
       }),
@@ -106,9 +139,9 @@ export const firebaseApi = createApi({
       }),
       providesTags: ['Cart'],
     }),
-    deleteCart: build.mutation<void, string>({
-      query: (ownerId) => ({
-        url: `carts/${ownerId}.json`,
+    deleteCart: build.mutation<void, DeleteCartMutationParams>({
+      query: ({ ownerId, token }) => ({
+        url: `carts/${ownerId}.json?auth=${token}`,
         method: 'DELETE',
       }),
       invalidatesTags: ['Cart'],

@@ -5,11 +5,17 @@ import { useTheme } from '../../theme';
 
 type Props = {
   title: string;
+  color?: 'primary' | 'secondary';
   onPress: () => void;
   disabled?: boolean;
 };
 
-const ShopButton = ({ title, onPress, disabled = false }: Props) => {
+const ShopButton = ({
+  title,
+  color = 'primary',
+  onPress,
+  disabled = false,
+}: Props) => {
   const { t } = useTheme();
 
   return (
@@ -29,7 +35,11 @@ const ShopButton = ({ title, onPress, disabled = false }: Props) => {
               t.itemsCenter,
               t.pY2,
               t.pX3,
-              disabled ? t.bgGray600 : t.bgPrimary,
+              disabled
+                ? t.bgGray600
+                : color === 'primary'
+                ? t.bgPrimary
+                : t.bgSecondary,
             ],
           })
         }
@@ -39,7 +49,14 @@ const ShopButton = ({ title, onPress, disabled = false }: Props) => {
       >
         <Text
           style={Platform.select({
-            ios: [t.textSm, disabled ? t.textGray700 : t.textPrimary],
+            ios: [
+              t.textSm,
+              disabled
+                ? t.textGray700
+                : color === 'primary'
+                ? t.textPrimary
+                : t.textSecondary,
+            ],
             android: [t.textSm, t.textPrimaryContrast],
           })}
         >
