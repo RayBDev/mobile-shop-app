@@ -9,6 +9,7 @@ import {
   Text,
 } from 'react-native';
 import { HeaderButtons, Item } from 'react-navigation-header-buttons';
+import * as Notifications from 'expo-notifications';
 
 import { useAppDispatch, useAppSelector } from '../../hooks/reduxHooks';
 import { useTheme, lightColors } from '../../theme';
@@ -21,6 +22,14 @@ import {
   useUpdateOwnerProductMutation,
 } from '../../services/firebaseApi';
 import ShopButton from '../../components/ui/ShopButton';
+
+export async function allowsNotificationsAsync() {
+  const settings = await Notifications.getPermissionsAsync();
+  return (
+    settings.granted ||
+    settings.ios?.status === Notifications.IosAuthorizationStatus.PROVISIONAL
+  );
+}
 
 type FormState = {
   inputValues: {
@@ -134,7 +143,7 @@ const EditProductScreen = ({
             iconName={
               Platform.OS === 'android' ? 'md-checkmark' : 'ios-checkmark'
             }
-            onPress={() => {
+            onPress={async () => {
               if (!formState.formIsValid) {
                 Alert.alert(
                   'Wrong Input!',
@@ -154,6 +163,26 @@ const EditProductScreen = ({
                   token: firebaseUserToken!,
                 });
               } else {
+                // Check if we already have notification permission
+                const notificationPermissionGranted =
+                  await allowsNotificationsAsync();
+
+                // Request notification permission if we don't have it
+                let notificationPermissionStatus;
+                if (!notificationPermissionGranted) {
+                  notificationPermissionStatus =
+                    await Notifications.requestPermissionsAsync();
+                }
+
+                // Set the push token based on the permission status
+                let pushToken;
+                if (notificationPermissionStatus?.status !== 'granted') {
+                  pushToken = null;
+                } else {
+                  pushToken = (await Notifications.getExpoPushTokenAsync())
+                    .data;
+                }
+
                 createProductInFirebase({
                   product: {
                     ownerId: route.params?.ownerId!,
@@ -161,6 +190,7 @@ const EditProductScreen = ({
                     description: formState.inputValues.description,
                     imageUrl: formState.inputValues.imageUrl,
                     price: Number(formState.inputValues.price),
+                    ownerPushToken: pushToken,
                   },
                   token: firebaseUserToken!,
                 });

@@ -69,6 +69,7 @@ const ProductsOverviewScreen = ({
           productPrice: product.price,
           productTitle: product.title,
           sum: product.price,
+          productOwnerPushToken: product.ownerPushToken,
         },
       };
     }
@@ -83,6 +84,7 @@ const ProductsOverviewScreen = ({
           productPrice: product.price,
           productTitle: product.title,
           sum: allCartItemsByOwner.items[product.id].sum + product.price,
+          productOwnerPushToken: product.ownerPushToken,
         },
       };
     }

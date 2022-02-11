@@ -14,6 +14,7 @@ const transformDatabaseGetResponse = (response: DatabaseProduct) => {
       imageUrl: response[key].imageUrl,
       description: response[key].description,
       price: response[key].price,
+      ownerPushToken: response[key].ownerPushToken,
     });
   }
   return transformedResponse;

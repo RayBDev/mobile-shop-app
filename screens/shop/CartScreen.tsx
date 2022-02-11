@@ -71,6 +71,8 @@ const CartScreen = ({ route }: ProductsStackScreenProps<'Cart'>) => {
           productPrice: allCartItemsByOwner.items[key].productPrice,
           quantity: allCartItemsByOwner.items[key].quantity,
           sum: allCartItemsByOwner.items[key].sum,
+          productOwnerPushToken:
+            allCartItemsByOwner.items[key].productOwnerPushToken,
         });
       }
       return transformedCartItems.sort((a, b) =>
@@ -89,6 +91,8 @@ const CartScreen = ({ route }: ProductsStackScreenProps<'Cart'>) => {
         quantity: allCartItemsByOwner.items[productId].quantity - 1,
         productPrice: allCartItemsByOwner.items[productId].productPrice,
         productTitle: allCartItemsByOwner.items[productId].productTitle,
+        productOwnerPushToken:
+          allCartItemsByOwner.items[productId].productOwnerPushToken,
         sum:
           allCartItemsByOwner.items[productId].sum -
           allCartItemsByOwner.items[productId].productPrice,
@@ -152,6 +156,44 @@ const CartScreen = ({ route }: ProductsStackScreenProps<'Cart'>) => {
     );
   }
 
+  const orderNowButtonHandler = () => {
+    if (allCartItemsByOwner) {
+      createOrder({
+        ownerId: route.params.ownerId!,
+        order: {
+          items: allCartItemsByOwner.items,
+          totalAmount: allCartItemsByOwner.totalAmount,
+          date: format(new Date(), 'MMM do yyyy, hh:mm aaa'),
+        },
+        token: firebaseUserToken!,
+      })
+        .unwrap()
+        .then(() => {
+          for (const cartItem of cartItems()!) {
+            const pushToken = cartItem.productOwnerPushToken;
+
+            fetch('https://expo.host/--/api/v2/push/send', {
+              method: 'POST',
+              headers: {
+                Accept: 'application/json',
+                'Accept-Encoding': 'gzip, deflate',
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                to: pushToken,
+                title: 'Order was placed!',
+                body: cartItem.productTitle,
+              }),
+            });
+          }
+          deleteCart({
+            ownerId: route.params.ownerId!,
+            token: firebaseUserToken!,
+          });
+        });
+    }
+  };
+
   return (
     <View style={[t.m5]}>
       <Card style={[t.flexRow, t.itemsCenter, t.justifyBetween, t.mB5, t.p3]}>
@@ -168,25 +210,7 @@ const CartScreen = ({ route }: ProductsStackScreenProps<'Cart'>) => {
         </Text>
         <ShopButton
           title="Order Now"
-          onPress={() => {
-            // dispatch(addOrder({ cartItems, cartTotalAmount }));
-            if (allCartItemsByOwner) {
-              createOrder({
-                ownerId: route.params.ownerId!,
-                order: {
-                  items: allCartItemsByOwner?.items,
-                  totalAmount: allCartItemsByOwner?.totalAmount,
-                  date: format(new Date(), 'MMM do yyyy, hh:mm aaa'),
-                },
-                token: firebaseUserToken!,
-              }).then(() => {
-                deleteCart({
-                  ownerId: route.params.ownerId!,
-                  token: firebaseUserToken!,
-                });
-              });
-            }
-          }}
+          onPress={orderNowButtonHandler}
           disabled={cartItems() === undefined || cartItems()?.length === 0}
         />
       </Card>

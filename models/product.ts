@@ -38,6 +38,8 @@ type Product = {
   description: string;
   /** Price of the product */
   price: number;
+  /** The push token of the product owner */
+  ownerPushToken: string | null;
 };
 
 export type DatabaseProduct = {

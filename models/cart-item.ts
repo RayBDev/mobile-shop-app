@@ -35,6 +35,8 @@ export type CartItem = {
   productTitle: string;
   /** Extended sell of item in cart */
   sum: number;
+  /** The push token of the product owner */
+  productOwnerPushToken: string | null;
 };
 
 export type CartItems = {
